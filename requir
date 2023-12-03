@@ -1,4 +1,20 @@
 https://pi.ai/talk
+*** Just to review from our call:
+
+    Research on what models we want to use/train from
+    What data do we need to collect in order to build our own LLM
+
+Reference websites:
+
+    https://www.wysa.com/clinical-evidence
+    https://woebothealth.com/
+    https://www.youper.ai/
+
+Indirect:
+
+    https://inflection.ai/
+    https://www.hippocraticai.com/ ***
+
 
 Disease detection
 Needs development of an Artificial Intelligence model using the Python language with given data sets.
