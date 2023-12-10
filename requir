@@ -35,3 +35,172 @@ pdf
 https://www.bop.gov/policy/progstat/5270_009_cn_1.pdf
 
 ===========================================================================================================
+
+https://github.com/bruzwen/ddxplus
+
+
+import pandas as pd
+import json
+
+# Read CSV file
+csv_file_path = 'release_train_patients.csv'
+json_conditions_path = 'release_conditions.json'
+json_evidences_path = 'release_evidences.json'
+
+df = pd.read_csv(csv_file_path)
+
+# Load JSON conditions data
+with open(json_conditions_path, 'r') as conditions_file:
+    conditions_data = json.load(conditions_file)
+
+# Load JSON evidences data
+with open(json_evidences_path, 'r') as evidences_file:
+    evidences_data = json.load(evidences_file)
+
+# Function to get symptoms for a pathology
+def get_symptoms(pathology):
+    if pathology in conditions_data:
+        condition_info = conditions_data[pathology]
+        if 'symptoms' in condition_info:
+            return condition_info['symptoms'].keys()
+    return []
+
+# Iterate through the first 15 rows
+for index, row in df.head(5).iterrows():
+    pathology = row['PATHOLOGY']
+
+    # Check if pathology is present in the JSON conditions data
+    if pathology in conditions_data:
+        # Get symptoms for the pathology
+        pathology_symptoms = get_symptoms(pathology)
+
+        # Check if symptoms are present in the JSON evidences data
+        common_symptoms = set(pathology_symptoms) & set(evidences_data.keys())
+
+        # Print information if common symptoms found
+        if common_symptoms:
+            # Print information from CSV
+            print(f"CSV Data for row {index + 1}:")
+            print(row)
+            
+            # Print information from JSON conditions
+            print(f"\nJSON Conditions Data for pathology '{pathology}':")
+            print(json.dumps(conditions_data[pathology], indent=4))
+
+            # Print information from JSON evidences for common symptoms
+            print("\nJSON Evidences Data for common symptoms:")
+            for symptom in common_symptoms:
+                print(f"Symptom: {symptom}")
+                print(json.dumps(evidences_data[symptom], indent=4))
+            
+            # Add a separator for better readability
+            print("=" * 50)
+
+
+========================================================================================================================================================
+
+
+
+
+
+
+
+
+!unzip "/content/drive/MyDrive/Colab Notebooks/release_test_patients.zip"
+!unzip "/content/drive/MyDrive/Colab Notebooks/release_train_patients.zip"
+!unzip "/content/drive/MyDrive/Colab Notebooks/release_validate_patients.zip"
+import pandas as pd
+import json
+
+# Read CSV file
+csv_file_path = '/content/release_train_patients.csv'
+json_conditions_path = '/content/drive/MyDrive/Colab Notebooks/release_conditions.json'
+json_evidences_path = '/content/drive/MyDrive/Colab Notebooks/release_evidences.json'
+
+df = pd.read_csv(csv_file_path)
+
+# Load JSON conditions data
+with open(json_conditions_path, 'r') as conditions_file:
+    conditions_data = json.load(conditions_file)
+
+# Load JSON evidences data
+with open(json_evidences_path, 'r') as evidences_file:
+    evidences_data = json.load(evidences_file)
+
+# Function to get symptoms for a pathology
+def get_symptoms(pathology):
+    if pathology in conditions_data:
+        condition_info = conditions_data[pathology]
+        if 'symptoms' in condition_info:
+            return condition_info['symptoms'].keys()
+    return []
+
+
+from concurrent.futures import ThreadPoolExecutor
+from tqdm import tqdm
+import numpy as np
+def process_row(patient_tuple):
+    # Access columns using dot notation
+    pathology = patient_tuple.PATHOLOGY
+
+    # Check if pathology is present in the JSON conditions data
+    if pathology in conditions_data:
+        # Get symptoms for the pathology
+        pathology_symptoms = get_symptoms(pathology)
+
+        # Encode symptoms as binary features using vectorized operations
+        encoded_symptoms = np.array([symptom in patient_tuple.EVIDENCES for symptom in pathology_symptoms], dtype=int)
+
+        # Create a row for the dataset
+        row = {
+            'AGE': patient_tuple.AGE,
+            'SEX': patient_tuple.SEX,
+            'PATHOLOGY': patient_tuple.PATHOLOGY,
+            'INITIAL_EVIDENCE': patient_tuple.INITIAL_EVIDENCE,
+            'DIFFERENTIAL_DIAGNOSIS': patient_tuple.DIFFERENTIAL_DIAGNOSIS,
+            **dict(zip(pathology_symptoms, encoded_symptoms))
+        }
+
+        return row
+
+# Use ThreadPoolExecutor for parallel processing
+with ThreadPoolExecutor() as executor:
+    rows = list(tqdm(executor.map(process_row, df.itertuples(index=False)), total=len(df), desc="Processing Rows"))
+
+# Append rows to the dataset
+dataset = pd.DataFrame(rows)
+
+# Save the dataset to a CSV file for future use
+dataset.to_csv('decision_tree_dataset.csv', index=False)
+
+
+
+=============================================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
